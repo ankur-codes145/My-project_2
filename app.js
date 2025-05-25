@@ -50,7 +50,7 @@ const store = MongoStore.create({
  touchAfter: 24 * 3600,
 }) ;
 
-store.on("error", () => {
+store.on("error", (err) => {
   console.log("error in MONGO SESSION STORE", err);
 });
 
@@ -85,9 +85,10 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.use((req, res, next) => {
+  res.locals.currUser = req.user;
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
-  res.locals.currUser = req.user;
+  
   next();
 });
 
@@ -108,4 +109,3 @@ app.use((err, req, res, next) => {
 app.listen(8080, () => {
   console.log("server is listening on 8080");
 });
-
