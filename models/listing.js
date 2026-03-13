@@ -1,70 +1,76 @@
-const mongoose = require("mongoose");
-const Review = require("./review.js");
+const mongoose = require('mongoose');
+const Review = require('./review.js');
+const { CATEGORY_SLUGS, inferCategory } = require('../utils/categoryData');
 const Schema = mongoose.Schema;
 
-const listingSchema = new Schema({
-  title: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  image: {
-    url: {
+const listingSchema = new Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    image: {
+      url: {
+        type: String,
+      },
+      filename: {
+        type: String,
+      },
+    },
+    price: {
+      type: Number,
+    },
+    location: {
       type: String,
     },
-    filename: {
+    country: {
       type: String,
     },
-  },
-  price: {
-    type: Number,
-    // required: true,
-  },
-  location: {
-    type: String,
-    // required: true,
-  },
-
-  country: {
-    type: String,
-    // required: true,
-  },
-  reviews: [
-    {
+    category: {
+      type: String,
+      enum: CATEGORY_SLUGS,
+      default: 'trending',
+    },
+    reviews: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Review',
+      },
+    ],
+    owner: {
       type: Schema.Types.ObjectId,
-      ref: "Review",
+      ref: 'User',
     },
-  ],
-  owner: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-  },
-  geometry: {
-    type: {
-      type: String,
-      enum: ["Point"],
-    
-    },
-    coordinates: {
-      type: [Number],
-    
+    geometry: {
+      type: {
+        type: String,
+        enum: ['Point'],
+      },
+      coordinates: {
+        type: [Number],
+      },
     },
   },
-  // category: {
-  //     type: String,
-  //     enum: ["mountains", "arctic", "farms","deserts"]
-  //     }
+  { timestamps: true }
+);
+
+listingSchema.pre('save', function assignCategory(next) {
+  if (!this.category) {
+    this.category = inferCategory(this);
+  }
+  next();
 });
 
-listingSchema.post("findOneAndDelete", async (listing) => {
+listingSchema.post('findOneAndDelete', async (listing) => {
   if (listing) {
     await Review.deleteMany({ _id: { $in: listing.reviews } });
   }
 });
 
-const Listing = mongoose.model("Listing", listingSchema);
+const Listing = mongoose.model('Listing', listingSchema);
 
 module.exports = Listing;

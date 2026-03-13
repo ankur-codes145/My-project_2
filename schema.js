@@ -1,4 +1,5 @@
-const Joi = require("joi");
+const Joi = require('joi');
+const { CATEGORY_SLUGS } = require('./utils/categoryData');
 
 module.exports.listingSchema = Joi.object({
   title: Joi.string().required(),
@@ -6,12 +7,11 @@ module.exports.listingSchema = Joi.object({
   location: Joi.string().required(),
   country: Joi.string().required(),
   price: Joi.number().required().min(0),
+  category: Joi.string().valid(...CATEGORY_SLUGS).optional().allow(''),
   image: Joi.object({
     url: Joi.string().required(),
     filename: Joi.string().required(),
   }).optional(),
-
-  // image: Joi.string().allow("",null).required(),
 });
 
 module.exports.reviewSchema = Joi.object({

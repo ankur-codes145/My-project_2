@@ -19,12 +19,10 @@
         </p>
         <p class="card-text"> &#8377; <%= listing.price.toLocaleString("en-IN")%>
         </p>
-        <p class="card-text">
-          <%= listing.location %>
-        </p>
-        <p class="card-text">
-          <%= listing.country %>
-        </p>
+        <p class="card-text"><%= listing.location %>, <%= listing.country %></p>
+        <% if (listing.category) { %>
+          <p class="card-text"><span class="badge text-bg-light border"><%= listing.category.replace(/-/g, ' ') %></span></p>
+        <% } %>
         </p>
       </div>
     </div>
@@ -109,8 +107,9 @@
         </div>
         <div class="col-6 offset-3 mb-3">
           <h3>Where you'll be</h3>
-          <div id="map" data-coords='<%- JSON.stringify(listing.geometry.coordinates) %>'
-            data-title="<%= listing.title %>" data-location="<%= listing.location %>"></div>
+          <div id="map" data-coords='<%- JSON.stringify((listing.geometry && listing.geometry.coordinates) || []) %>'
+            data-title="<%= listing.title %>" data-location="<%= listing.location %>, <%= listing.country %>"></div>
+          <small class="text-muted">Map is generated automatically from the listing location.</small>
         </div>
 
 
