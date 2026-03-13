@@ -1,4 +1,3 @@
-const fetch = require("node-fetch");
 const Listing = require("../models/listing");
 
 module.exports.index = async (req, res) => {
@@ -11,7 +10,7 @@ module.exports.renderNewForm = (req, res) => {
 };
 
 module.exports.showListing = async (req, res) => {
-  let { id } = req.params;
+  const { id } = req.params;
   const listing = await Listing.findById(id)
     .populate({
       path: "reviews",
@@ -20,9 +19,10 @@ module.exports.showListing = async (req, res) => {
       },
     })
     .populate("owner");
+
   if (!listing) {
     req.flash("error", "Listing you requested for does not exist!");
-    res.redirect("/listings");
+    return res.redirect("/listings");
   }
 
   res.render("listings/show.ejs", { listing });
@@ -43,7 +43,7 @@ module.exports.createListing = async (req, res) => {
     await listing.save();
 
     req.flash("success", "New listing created!");
-    res.redirect(`/listings`);
+    res.redirect("/listings");
   } catch (err) {
     console.error("Error creating listing:", err);
     req.flash("error", "Something went wrong!");
@@ -52,24 +52,27 @@ module.exports.createListing = async (req, res) => {
 };
 
 module.exports.renderEditForm = async (req, res) => {
-  let { id } = req.params;
+  const { id } = req.params;
   const listing = await Listing.findById(id);
+
   if (!listing) {
     req.flash("error", "Listing you requested for does not exist!");
-    res.redirect("/listings");
+    return res.redirect("/listings");
   }
 
-  let orignalImageUrl = listing.image.url;
+  let originalImageUrl = listing.image?.url || "";
+  if (originalImageUrl) {
+    originalImageUrl = originalImageUrl.replace("/upload", "/upload/w_250");
+  }
 
-  orignalImageUrl = orignalImageUrl.replace("/upload", "/upload/w_250");
-  res.render("listings/edit.ejs", { listing, orignalImageUrl });
+  res.render("listings/edit.ejs", { listing, originalImageUrl });
 };
 
 module.exports.updateListing = async (req, res) => {
   try {
     const { id } = req.params;
-
     const listing = await Listing.findById(id);
+
     if (!listing) {
       req.flash("error", "Listing not found!");
       return res.redirect("/listings");
@@ -83,7 +86,7 @@ module.exports.updateListing = async (req, res) => {
         `&format=json&limit=1`;
 
       const geoRes = await fetch(nominatimUrl, {
-        headers: { "User-Agent": "wanderlust-app/1.0 (you@example.com)" },
+        headers: { "User-Agent": "wanderlust-app/1.0 (contact@example.com)" },
       });
       const geoData = await geoRes.json();
 
@@ -123,9 +126,8 @@ module.exports.updateListing = async (req, res) => {
 };
 
 module.exports.destroyListing = async (req, res) => {
-  let { id } = req.params;
-  let deletedListing = await Listing.findByIdAndDelete(id);
-
-  req.flash("success", "Listing Deleted!");
+  const { id } = req.params;
+  await Listing.findByIdAndDelete(id);
+  req.flash("success", "Listing deleted!");
   res.redirect("/listings");
 };
